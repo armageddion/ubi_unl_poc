@@ -1,6 +1,6 @@
 const BACKEND_URL = "https://ubi-unl-poc.onrender.com";
 
-const FRONTEND_PASSWORD_HASH = "39a21dea50c2477ec25ddc9b4263d6dca9af9b2bb1f591b1a76d75367ea4f0eb";
+const FRONTEND_PASSWORD_HASH = "33d29b02c975065df42a23f560ece8602ed872cf24240fb1e36cd29494e40c96";
 
 async function hashPassword(password) {
     const encoder = new TextEncoder();
