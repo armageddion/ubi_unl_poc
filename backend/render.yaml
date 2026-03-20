@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: ubi-unl-poc
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: SOLUME_BASE_URL
+        sync: false
+      - key: SOLUME_USERNAME
+        sync: false
+      - key: SOLUME_PASSWORD
+        sync: false
+      - key: SOLUME_COMPANY
+        sync: false
+      - key: SOLUME_STORE
+        sync: false
+      - key: SOLUME_ENDPOINT_1
+        sync: false
+      - key: SOLUME_ENDPOINT_2
+        sync: false
+      - key: ALLOWED_ORIGIN
+        sync: false
