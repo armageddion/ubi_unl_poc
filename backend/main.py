@@ -127,7 +127,7 @@ async def trigger_1(request: Trigger1Request):
         )
 
 
-@app.put("/api/trigger-2", response_model=TriggerResponse)
+@app.post("/api/trigger-2", response_model=TriggerResponse)
 async def trigger_2(request: Trigger2Request):
     try:
         cookies = await get_solume_cookies()
