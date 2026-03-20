@@ -19,7 +19,6 @@ ubi_unl_poc/
 ├── backend/                  # FastAPI backend (deploy to Render)
 │   ├── main.py             # API endpoints
 │   ├── requirements.txt     # Python dependencies
-│   ├── render.yaml         # Render deployment config
 │   └── .env.example         # Environment variables template
 │
 ├── frontend/                # Static frontend (auto-deployed to GitHub Pages)
@@ -30,6 +29,8 @@ ubi_unl_poc/
 ├── .github/
 │   └── workflows/
 │       └── deploy.yml       # GitHub Actions: deploys frontend on push
+│
+├── render.yaml             # Render deployment config (Blueprint)
 │
 └── README.md               # This file
 ```
