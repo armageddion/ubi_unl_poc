@@ -2,10 +2,15 @@ services:
   - type: web
     name: ubi-unl-poc
     runtime: python
+    region: oregon
+    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
-    sourceDir: backend
+    sourceDir: /backend
+    healthCheckPath: /health
     envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
       - key: SOLUME_BASE_URL
         sync: false
       - key: SOLUME_USERNAME

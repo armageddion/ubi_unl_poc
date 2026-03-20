@@ -20,7 +20,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-SOLUME_BASE_URL = os.getenv("SOLUME_BASE_URL", "https://eastus.common.solumesl.com")
+SOLUME_BASE_URL = os.getenv("SOLUME_BASE_URL")
 SOLUME_USERNAME = os.getenv("SOLUME_USERNAME")
 SOLUME_PASSWORD = os.getenv("SOLUME_PASSWORD")
 SOLUME_COMPANY = os.getenv("SOLUME_COMPANY")
