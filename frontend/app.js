@@ -2,6 +2,8 @@ const BACKEND_URL = "https://ubi-unl-poc.onrender.com";
 
 const FRONTEND_PASSWORD_HASH = "33d29b02c975065df42a23f560ece8602ed872cf24240fb1e36cd29494e40c96";
 
+let customCsvText = null;
+
 async function hashPassword(password) {
     const encoder = new TextEncoder();
     const data = encoder.encode(password);
@@ -138,6 +140,162 @@ async function triggerLedBlink() {
     }
 }
 
+function parseCSV(csvText) {
+    const lines = csvText.trim().split('\n');
+    const headers = lines[0].split(',');
+    const result = [];
+    
+    for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',');
+        if (values.length < headers.length) continue;
+        
+        const row = {};
+        for (let j = 0; j < headers.length; j++) {
+            row[headers[j].trim()] = values[j] ? values[j].trim() : '';
+        }
+        result.push(row);
+    }
+    
+    return result;
+}
+
+function loadScenarioData(csvData, scenarioNum) {
+    const pageCol = `Scenario${scenarioNum}_page`;
+    const ledCol = `Scenario${scenarioNum}_led`;
+    
+    const pageGroups = {};
+    const ledGroups = { RED: [], GREEN: [] };
+    
+    for (const row of csvData) {
+        const labelCode = row.LabelCode;
+        const pageValue = row[pageCol];
+        const ledValue = row[ledCol];
+        
+        if (!labelCode) continue;
+        
+        if (pageValue) {
+            const pageNum = parseInt(pageValue, 10);
+            if (!isNaN(pageNum)) {
+                if (!pageGroups[pageNum]) {
+                    pageGroups[pageNum] = [];
+                }
+                pageGroups[pageNum].push(labelCode);
+            }
+        }
+        
+        if (ledValue && (ledValue === 'RED' || ledValue === 'GREEN')) {
+            ledGroups[ledValue].push(labelCode);
+        }
+    }
+    
+    return { pageGroups, ledGroups };
+}
+
+async function triggerPageChangeBatch(labelCodes, page) {
+    if (!labelCodes || labelCodes.length === 0) return;
+    
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/trigger-1`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ labelCodes, page }),
+        });
+        
+        const data = await response.json();
+        if (data.status !== 'success') {
+            throw new Error(data.message || 'Page change failed');
+        }
+    } catch (error) {
+        throw error;
+    }
+}
+
+async function triggerLedBlinkBatch(labelCodes, color, duration) {
+    if (!labelCodes || labelCodes.length === 0) return;
+    
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/trigger-2`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ labelCodes, color, duration }),
+        });
+        
+        const data = await response.json();
+        if (data.status !== 'success') {
+            throw new Error(data.message || 'LED blink failed');
+        }
+    } catch (error) {
+        throw error;
+    }
+}
+
+function handleCsvUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        customCsvText = e.target.result;
+        showToast('Custom CSV loaded - will be used for scenarios', 'success');
+    };
+    reader.onerror = () => {
+        showToast('Failed to read file', 'error');
+    };
+    reader.readAsText(file);
+}
+
+async function runScenario(scenarioNum) {
+    const buttonMap = { 1: 'btn-scenario-1', 2: 'btn-scenario-2', 3: 'btn-scenario-3', 4: 'btn-scenario-4' };
+    const button = document.getElementById(buttonMap[scenarioNum]);
+    
+    button.disabled = true;
+    button.textContent = 'Running...';
+    
+    try {
+        let csvText;
+        
+        if (customCsvText) {
+            csvText = customCsvText;
+        } else {
+            const response = await fetch('Scenarios.csv');
+            if (!response.ok) throw new Error('Failed to fetch CSV');
+            csvText = await response.text();
+        }
+        
+        const csvData = parseCSV(csvText);
+        const { pageGroups, ledGroups } = loadScenarioData(csvData, scenarioNum);
+        
+        const hasPageData = Object.keys(pageGroups).length > 0;
+        const hasLedData = ledGroups.RED.length > 0 || ledGroups.GREEN.length > 0;
+        
+        if (!hasPageData && !hasLedData) {
+            showToast('No page or LED data', 'error');
+            return;
+        }
+        
+        const sortedPages = Object.keys(pageGroups).map(Number).sort((a, b) => a - b);
+        
+        for (const page of sortedPages) {
+            await triggerPageChangeBatch(pageGroups[page], page);
+        }
+        
+        if (ledGroups.RED.length > 0) {
+            await triggerLedBlinkBatch(ledGroups.RED, 'RED', '30s');
+        }
+        
+        if (ledGroups.GREEN.length > 0) {
+            await triggerLedBlinkBatch(ledGroups.GREEN, 'GREEN', '30s');
+        }
+        
+        showToast(`Scenario ${scenarioNum} completed successfully`, 'success');
+    } catch (error) {
+        showToast(`Error: ${error.message}`, 'error');
+    } finally {
+        button.disabled = false;
+        button.textContent = `Scenario ${scenarioNum}`;
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('password-submit').addEventListener('click', handlePasswordSubmit);
     document.getElementById('password-input').addEventListener('keypress', (e) => {
@@ -146,4 +304,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('btn-1').addEventListener('click', triggerPageChange);
     document.getElementById('btn-2').addEventListener('click', triggerLedBlink);
+    
+    document.getElementById('csv-upload').addEventListener('change', handleCsvUpload);
+    
+    document.getElementById('btn-scenario-1').addEventListener('click', () => runScenario(1));
+    document.getElementById('btn-scenario-2').addEventListener('click', () => runScenario(2));
+    document.getElementById('btn-scenario-3').addEventListener('click', () => runScenario(3));
+    document.getElementById('btn-scenario-4').addEventListener('click', () => runScenario(4));
 });

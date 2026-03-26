@@ -10,6 +10,7 @@ backend/
 ├── requirements.txt  # Python dependencies
 ├── render.yaml       # Render deployment configuration
 ├── .env.example      # Environment variables template
+├── .env              # Environment variables (not committed)
 └── README.md         # This file
 ```
 
@@ -25,6 +26,7 @@ backend/
    - `SOLUME_PASSWORD`: Your Solume API password
    - `SOLUME_COMPANY`: Company identifier
    - `SOLUME_STORE`: Store identifier
+   - `SOLUME_BASE_URL`: Solume API base URL
    - `SOLUME_ENDPOINT_1`: Endpoint for page change (default: `/common/api/v2/labels/page`)
    - `SOLUME_ENDPOINT_2`: Endpoint for LED blink (default: `/common/api/v2/labels/led`)
    - `ALLOWED_ORIGIN`: Your GitHub Pages URL (e.g., `https://username.github.io/repo-name`)
@@ -36,7 +38,7 @@ backend/
 
 4. Run locally:
    ```bash
-   uvicorn main:app --reload
+   uvicorn main:app --reload --host 0.0.0.0 --port 8000
    ```
 
 ## Deployment to Render
@@ -53,7 +55,7 @@ backend/
 |--------|----------|-------------|
 | GET | `/health` | Health check |
 | POST | `/api/trigger-1` | Execute Page Change |
-| PUT | `/api/trigger-2` | Execute LED Blink |
+| POST | `/api/trigger-2` | Execute LED Blink |
 
 ## Trigger 1: Page Change (POST)
 
@@ -77,14 +79,14 @@ backend/
 }
 ```
 
-## Trigger 2: LED Blink (PUT)
+## Trigger 2: LED Blink (POST)
 
 **Request:**
 ```json
 {
   "labelCodes": ["04507B0AC391", "04507B0AC392"],
   "color": "RED",
-  "duration": "0s"
+  "duration": "30s"
 }
 ```
 
@@ -94,11 +96,39 @@ backend/
   "company": "...",
   "store": "...",
   "ledBlinkList": [
-    { "labelCode": "04507B0AC391", "color": "RED", "duration": "0s", "patternId": 0, "multiLed": false },
-    { "labelCode": "04507B0AC392", "color": "RED", "duration": "0s", "patternId": 0, "multiLed": false }
+    { "labelCode": "04507B0AC391", "color": "RED", "duration": "30s", "patternId": 0, "multiLed": false },
+    { "labelCode": "04507B0AC392", "color": "RED", "duration": "30s", "patternId": 0, "multiLed": false }
   ]
 }
 ```
+
+### LED Duration Options
+
+| Value | Description |
+|-------|-------------|
+| `0s` | Continuous (no timeout) |
+| `10s` | 10 seconds |
+| `30s` | 30 seconds |
+| `1m` | 1 minute |
+| `2m` | 2 minutes |
+| `5m` | 5 minutes |
+| `10m` | 10 minutes |
+| `15m` | 15 minutes |
+| `20m` | 20 minutes |
+| `30m` | 30 minutes |
+| `60m` | 60 minutes |
+
+### LED Color Options
+
+| Value | Description |
+|-------|-------------|
+| `RED` | Red LED |
+| `GREEN` | Green LED |
+| `YELLOW` | Yellow LED |
+| `BLUE` | Blue LED |
+| `MAGENTA` | Magenta LED |
+| `CYAN` | Cyan LED |
+| `WHITE` | White LED |
 
 ## Response Format
 

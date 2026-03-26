@@ -172,6 +172,46 @@ header h1 {
     margin-top: 0.5rem;
 }
 
+.scenarios-section {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    align-items: flex-end;
+}
+
+.scenarios-section .csv-upload {
+    flex: 0 0 auto;
+    min-width: 180px;
+}
+
+.scenarios-section .csv-upload label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #aaa;
+    font-size: 14px;
+}
+
+.scenarios-section .csv-upload input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #3a3a5e;
+    border-radius: 8px;
+    background: #0f0f1a;
+    color: #fff;
+    font-size: 14px;
+}
+
+.scenarios-section .scenario-buttons {
+    display: flex;
+    flex: 1;
+    gap: 1rem;
+}
+
+.scenario-buttons button {
+    flex: 1;
+    margin-top: 0;
+}
+
 .trigger-section button:hover:not(:disabled) {
     background: #5a5a9e;
 }
