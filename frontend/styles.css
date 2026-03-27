@@ -174,25 +174,28 @@ header h1 {
 
 .scenarios-section {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     gap: 1rem;
-    align-items: flex-end;
 }
 
-.scenarios-section .csv-upload {
-    flex: 0 0 auto;
-    min-width: 180px;
+.scenarios-section .csv-upload-row {
+    width: 100%;
 }
 
-.scenarios-section .csv-upload label {
+.scenarios-section .csv-upload-row label {
     display: block;
     margin-bottom: 0.5rem;
     color: #aaa;
     font-size: 14px;
 }
 
-.scenarios-section .csv-upload input {
-    width: 100%;
+.scenarios-section .csv-upload-group {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.scenarios-section .csv-upload-group input[type="file"] {
+    flex: 0 0 auto;
     padding: 8px;
     border: 1px solid #3a3a5e;
     border-radius: 8px;
@@ -201,14 +204,35 @@ header h1 {
     font-size: 14px;
 }
 
+.scenarios-section .csv-upload-group input[type="file"]::file-selector-button {
+    background: #3a3a5e;
+    color: #fff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 8px;
+}
+
+.scenarios-section #csv-filename {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #3a3a5e;
+    border-radius: 8px;
+    background: #0f0f1a;
+    color: #888;
+    font-size: 14px;
+}
+
 .scenarios-section .scenario-buttons {
     display: flex;
-    flex: 1;
-    gap: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
 }
 
 .scenario-buttons button {
-    flex: 1;
+    flex: 1 0 18%;
+    min-width: 80px;
     margin-top: 0;
 }
 

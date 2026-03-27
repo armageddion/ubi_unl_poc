@@ -59,7 +59,7 @@ The application is protected by a client-side password. To set your password:
 4. Click "Execute LED Blink"
 
 ### Scenarios (Automated)
-Four scenario buttons automate sequences of page changes and LED blinks based on `Scenarios.csv`:
+Ten scenario buttons (Scenario 1-10) automate sequences of page changes and LED blinks based on `Scenarios.csv`:
 
 | Scenario | Page Actions | LED Actions |
 |----------|-------------|-------------|
@@ -67,8 +67,11 @@ Four scenario buttons automate sequences of page changes and LED blinks based on
 | 2 | Some labels → page 1, Some → page 2 | None |
 | 3 | All labels → page 1 | Some → RED, Some → GREEN |
 | 4 | Some labels → page 1, Some → page 2 | Some → RED, Some → GREEN |
+| 5-10 | User-defined | User-defined |
 
-**Execution order**: Pages execute in ascending order (page 1, then page 2), followed by RED LEDs, then GREEN LEDs.
+**Execution order**: Pages execute in ascending order (page 1, then page 2), followed by LED colors in this order: RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE.
+
+**Supported LED colors** (case-insensitive): RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE.
 
 #### Custom CSV Upload
 You can upload a custom CSV file to override the default `Scenarios.csv` for the current session:
@@ -85,12 +88,24 @@ The custom CSV must have the same format as `Scenarios.csv`.
 |--------|-------------|
 | LabelCode | The label identifier |
 | Scenario1_page | Page number for Scenario 1 |
-| Scenario1_led | LED color for Scenario 1 (RED/GREEN/blank) |
+| Scenario1_led | LED color for Scenario 1 (case-insensitive: RED/GREEN/YELLOW/BLUE/MAGENTA/CYAN/WHITE/blank) |
 | Scenario2_page | Page number for Scenario 2 |
-| Scenario2_led | LED color for Scenario 2 (RED/GREEN/blank) |
+| Scenario2_led | LED color for Scenario 2 (case-insensitive: RED/GREEN/YELLOW/BLUE/MAGENTA/CYAN/WHITE/blank) |
 | Scenario3_page | Page number for Scenario 3 |
-| Scenario3_led | LED color for Scenario 3 (RED/GREEN/blank) |
+| Scenario3_led | LED color for Scenario 3 (case-insensitive: RED/GREEN/YELLOW/BLUE/MAGENTA/CYAN/WHITE/blank) |
 | Scenario4_page | Page number for Scenario 4 |
-| Scenario4_led | LED color for Scenario 4 (RED/GREEN/blank) |
+| Scenario4_led | LED color for Scenario 4 (case-insensitive: RED/GREEN/YELLOW/BLUE/MAGENTA/CYAN/WHITE/blank) |
+| Scenario5_page | Page number for Scenario 5 |
+| Scenario5_led | LED color for Scenario 5 (case-insensitive: RED/GREEN/YELLOW/BLUE/MAGENTA/CYAN/WHITE/blank) |
+| Scenario6_page | Page number for Scenario 6 |
+| Scenario6_led | LED color for Scenario 6 (case-insensitive: RED/GREEN/YELLOW/BLUE/MAGENTA/CYAN/WHITE/blank) |
+| Scenario7_page | Page number for Scenario 7 |
+| Scenario7_led | LED color for Scenario 7 (case-insensitive: RED/GREEN/YELLOW/BLUE/MAGENTA/CYAN/WHITE/blank) |
+| Scenario8_page | Page number for Scenario 8 |
+| Scenario8_led | LED color for Scenario 8 (case-insensitive: RED/GREEN/YELLOW/BLUE/MAGENTA/CYAN/WHITE/blank) |
+| Scenario9_page | Page number for Scenario 9 |
+| Scenario9_led | LED color for Scenario 9 (case-insensitive: RED/GREEN/YELLOW/BLUE/MAGENTA/CYAN/WHITE/blank) |
+| Scenario10_page | Page number for Scenario 10 |
+| Scenario10_led | LED color for Scenario 10 (case-insensitive: RED/GREEN/YELLOW/BLUE/MAGENTA/CYAN/WHITE/blank) |
 
 Toast notifications will show success or failure status with descriptive messages.

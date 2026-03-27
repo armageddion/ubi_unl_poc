@@ -163,8 +163,12 @@ function loadScenarioData(csvData, scenarioNum) {
     const pageCol = `Scenario${scenarioNum}_page`;
     const ledCol = `Scenario${scenarioNum}_led`;
     
+    const validLedColors = ['RED', 'GREEN', 'YELLOW', 'BLUE', 'MAGENTA', 'CYAN', 'WHITE'];
     const pageGroups = {};
-    const ledGroups = { RED: [], GREEN: [] };
+    const ledGroups = {};
+    for (const color of validLedColors) {
+        ledGroups[color] = [];
+    }
     
     for (const row of csvData) {
         const labelCode = row.LabelCode;
@@ -183,8 +187,11 @@ function loadScenarioData(csvData, scenarioNum) {
             }
         }
         
-        if (ledValue && (ledValue === 'RED' || ledValue === 'GREEN')) {
-            ledGroups[ledValue].push(labelCode);
+        if (ledValue) {
+            const ledColor = ledValue.toUpperCase().trim();
+            if (validLedColors.includes(ledColor)) {
+                ledGroups[ledColor].push(labelCode);
+            }
         }
     }
     
@@ -236,6 +243,7 @@ function handleCsvUpload(event) {
     const reader = new FileReader();
     reader.onload = (e) => {
         customCsvText = e.target.result;
+        document.getElementById('csv-filename').value = file.name;
         showToast('Custom CSV loaded - will be used for scenarios', 'success');
     };
     reader.onerror = () => {
@@ -245,7 +253,11 @@ function handleCsvUpload(event) {
 }
 
 async function runScenario(scenarioNum) {
-    const buttonMap = { 1: 'btn-scenario-1', 2: 'btn-scenario-2', 3: 'btn-scenario-3', 4: 'btn-scenario-4' };
+    const buttonMap = { 
+        1: 'btn-scenario-1', 2: 'btn-scenario-2', 3: 'btn-scenario-3', 4: 'btn-scenario-4',
+        5: 'btn-scenario-5', 6: 'btn-scenario-6', 7: 'btn-scenario-7', 8: 'btn-scenario-8',
+        9: 'btn-scenario-9', 10: 'btn-scenario-10'
+    };
     const button = document.getElementById(buttonMap[scenarioNum]);
     
     button.disabled = true;
@@ -266,7 +278,8 @@ async function runScenario(scenarioNum) {
         const { pageGroups, ledGroups } = loadScenarioData(csvData, scenarioNum);
         
         const hasPageData = Object.keys(pageGroups).length > 0;
-        const hasLedData = ledGroups.RED.length > 0 || ledGroups.GREEN.length > 0;
+        const validLedColors = ['RED', 'GREEN', 'YELLOW', 'BLUE', 'MAGENTA', 'CYAN', 'WHITE'];
+        const hasLedData = validLedColors.some(color => ledGroups[color] && ledGroups[color].length > 0);
         
         if (!hasPageData && !hasLedData) {
             showToast('No page or LED data', 'error');
@@ -279,12 +292,10 @@ async function runScenario(scenarioNum) {
             await triggerPageChangeBatch(pageGroups[page], page);
         }
         
-        if (ledGroups.RED.length > 0) {
-            await triggerLedBlinkBatch(ledGroups.RED, 'RED', '30s');
-        }
-        
-        if (ledGroups.GREEN.length > 0) {
-            await triggerLedBlinkBatch(ledGroups.GREEN, 'GREEN', '30s');
+        for (const color of validLedColors) {
+            if (ledGroups[color].length > 0) {
+                await triggerLedBlinkBatch(ledGroups[color], color, '30s');
+            }
         }
         
         showToast(`Scenario ${scenarioNum} completed successfully`, 'success');
@@ -302,6 +313,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Enter') handlePasswordSubmit();
     });
 
+    document.getElementById('csv-filename').value = 'Default';
+
     document.getElementById('btn-1').addEventListener('click', triggerPageChange);
     document.getElementById('btn-2').addEventListener('click', triggerLedBlink);
     
@@ -311,4 +324,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-scenario-2').addEventListener('click', () => runScenario(2));
     document.getElementById('btn-scenario-3').addEventListener('click', () => runScenario(3));
     document.getElementById('btn-scenario-4').addEventListener('click', () => runScenario(4));
+    document.getElementById('btn-scenario-5').addEventListener('click', () => runScenario(5));
+    document.getElementById('btn-scenario-6').addEventListener('click', () => runScenario(6));
+    document.getElementById('btn-scenario-7').addEventListener('click', () => runScenario(7));
+    document.getElementById('btn-scenario-8').addEventListener('click', () => runScenario(8));
+    document.getElementById('btn-scenario-9').addEventListener('click', () => runScenario(9));
+    document.getElementById('btn-scenario-10').addEventListener('click', () => runScenario(10));
 });
