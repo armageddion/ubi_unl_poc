@@ -98,11 +98,13 @@ async function triggerLedBlink() {
     const labelCodesInput = document.getElementById('labelcodes-2');
     const colorSelect = document.getElementById('color-2');
     const durationSelect = document.getElementById('duration-2');
+    const patternInput = document.getElementById('pattern-2');
     const button = document.getElementById('btn-2');
-    
+
     const labelCodes = labelCodesInput.value.trim();
     const color = colorSelect.value;
     const duration = durationSelect.value;
+    const pattern = patternInput.value ? parseInt(patternInput.value, 10) : 0;
 
     if (!labelCodes) {
         showToast('Please enter label codes', 'error');
@@ -121,7 +123,8 @@ async function triggerLedBlink() {
             body: JSON.stringify({
                 labelCodes: labelCodes.split(',').map(s => s.trim()).filter(s => s),
                 color: color,
-                duration: duration
+                duration: duration,
+                pattern: pattern
             }),
         });
 
@@ -162,21 +165,20 @@ function parseCSV(csvText) {
 function loadScenarioData(csvData, scenarioNum) {
     const pageCol = `Scenario${scenarioNum}_page`;
     const ledCol = `Scenario${scenarioNum}_led`;
-    
+    const patternCol = `Scenario${scenarioNum}_led_pattern`;
+
     const validLedColors = ['RED', 'GREEN', 'YELLOW', 'BLUE', 'MAGENTA', 'CYAN', 'WHITE'];
     const pageGroups = {};
     const ledGroups = {};
-    for (const color of validLedColors) {
-        ledGroups[color] = [];
-    }
-    
+
     for (const row of csvData) {
         const labelCode = row.LabelCode;
         const pageValue = row[pageCol];
         const ledValue = row[ledCol];
-        
+        const patternValue = row[patternCol];
+
         if (!labelCode) continue;
-        
+
         if (pageValue) {
             const pageNum = parseInt(pageValue, 10);
             if (!isNaN(pageNum)) {
@@ -186,15 +188,20 @@ function loadScenarioData(csvData, scenarioNum) {
                 pageGroups[pageNum].push(labelCode);
             }
         }
-        
+
         if (ledValue) {
             const ledColor = ledValue.toUpperCase().trim();
             if (validLedColors.includes(ledColor)) {
-                ledGroups[ledColor].push(labelCode);
+                const pattern = patternValue ? parseInt(patternValue, 10) : 0;
+                const key = `${ledColor}_${pattern}`;
+                if (!ledGroups[key]) {
+                    ledGroups[key] = [];
+                }
+                ledGroups[key].push(labelCode);
             }
         }
     }
-    
+
     return { pageGroups, ledGroups };
 }
 
@@ -217,16 +224,16 @@ async function triggerPageChangeBatch(labelCodes, page) {
     }
 }
 
-async function triggerLedBlinkBatch(labelCodes, color, duration) {
+async function triggerLedBlinkBatch(labelCodes, color, duration, pattern = 0) {
     if (!labelCodes || labelCodes.length === 0) return;
-    
+
     try {
         const response = await fetch(`${BACKEND_URL}/api/trigger-2`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ labelCodes, color, duration }),
+            body: JSON.stringify({ labelCodes, color, duration, pattern }),
         });
-        
+
         const data = await response.json();
         if (data.status !== 'success') {
             throw new Error(data.message || 'LED blink failed');
@@ -278,8 +285,7 @@ async function runScenario(scenarioNum) {
         const { pageGroups, ledGroups } = loadScenarioData(csvData, scenarioNum);
         
         const hasPageData = Object.keys(pageGroups).length > 0;
-        const validLedColors = ['RED', 'GREEN', 'YELLOW', 'BLUE', 'MAGENTA', 'CYAN', 'WHITE'];
-        const hasLedData = validLedColors.some(color => ledGroups[color] && ledGroups[color].length > 0);
+        const hasLedData = Object.keys(ledGroups).some(key => ledGroups[key] && ledGroups[key].length > 0);
         
         if (!hasPageData && !hasLedData) {
             showToast('No page or LED data', 'error');
@@ -287,14 +293,15 @@ async function runScenario(scenarioNum) {
         }
         
         const sortedPages = Object.keys(pageGroups).map(Number).sort((a, b) => a - b);
-        
+
         for (const page of sortedPages) {
             await triggerPageChangeBatch(pageGroups[page], page);
         }
-        
-        for (const color of validLedColors) {
-            if (ledGroups[color].length > 0) {
-                await triggerLedBlinkBatch(ledGroups[color], color, '30s');
+
+        for (const key of Object.keys(ledGroups)) {
+            if (ledGroups[key].length > 0) {
+                const [color, pattern] = key.split('_');
+                await triggerLedBlinkBatch(ledGroups[key], color, '30s', parseInt(pattern, 10));
             }
         }
         

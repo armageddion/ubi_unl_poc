@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List
@@ -38,6 +38,7 @@ class Trigger2Request(BaseModel):
     labelCodes: List[str]
     color: str
     duration: str
+    pattern: int = 0
 
 
 class TriggerResponse(BaseModel):
@@ -50,17 +51,13 @@ async def get_solume_cookies() -> str:
     async with httpx.AsyncClient() as client:
         response = await client.post(
             f"{SOLUME_BASE_URL}/common/api/v2/token",
-            json={
-                "username": SOLUME_USERNAME,
-                "password": SOLUME_PASSWORD
-            },
+            json={"username": SOLUME_USERNAME, "password": SOLUME_PASSWORD},
             headers={"Content-Type": "application/json"},
-            timeout=30.0
+            timeout=30.0,
         )
         if response.status_code != 200:
             raise HTTPException(
-                status_code=response.status_code,
-                detail=f"Auth failed: {response.text}"
+                status_code=response.status_code, detail=f"Auth failed: {response.text}"
             )
         set_cookie = response.headers.get("set-cookie", "")
         return set_cookie
@@ -85,100 +82,83 @@ async def health_check():
 async def trigger_1(request: Trigger1Request):
     try:
         cookies = await get_solume_cookies()
-        
+
         page_change_list = [
             {"labelCode": labelCode, "page": request.page}
             for labelCode in request.labelCodes
         ]
-        
+
         url = f"{SOLUME_BASE_URL}{SOLUME_ENDPOINT_1}?company={SOLUME_COMPANY}&store={SOLUME_STORE}"
-        
+
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 url,
                 json={"pageChangeList": page_change_list},
-                headers={
-                    "Cookie": cookies,
-                    "Content-Type": "application/json"
-                },
-                timeout=60.0
+                headers={"Cookie": cookies, "Content-Type": "application/json"},
+                timeout=60.0,
             )
-            
+
         if response.status_code >= 400:
             return TriggerResponse(
                 status="failure",
-                message=f"API call failed (status {response.status_code}): {response.text}"
+                message=f"API call failed (status {response.status_code}): {response.text}",
             )
-            
+
         return TriggerResponse(
             status="success",
             message="Page change completed successfully",
-            data=parse_response(response)
+            data=parse_response(response),
         )
     except HTTPException as e:
-        return TriggerResponse(
-            status="failure",
-            message=str(e.detail)
-        )
+        return TriggerResponse(status="failure", message=str(e.detail))
     except Exception as e:
-        return TriggerResponse(
-            status="failure",
-            message=f"Unexpected error: {str(e)}"
-        )
+        return TriggerResponse(status="failure", message=f"Unexpected error: {str(e)}")
 
 
 @app.post("/api/trigger-2", response_model=TriggerResponse)
 async def trigger_2(request: Trigger2Request):
     try:
         cookies = await get_solume_cookies()
-        
+
         led_blink_list = [
             {
                 "labelCode": labelCode,
                 "color": request.color,
                 "duration": request.duration,
-                "patternId": 0,
-                "multiLed": False
+                "patternId": request.pattern,
+                "multiLed": False,
             }
             for labelCode in request.labelCodes
         ]
-        
+
         url = f"{SOLUME_BASE_URL}{SOLUME_ENDPOINT_2}?company={SOLUME_COMPANY}&store={SOLUME_STORE}"
-        
+
         async with httpx.AsyncClient() as client:
             response = await client.put(
                 url,
                 json={"ledBlinkList": led_blink_list},
-                headers={
-                    "Cookie": cookies,
-                    "Content-Type": "application/json"
-                },
-                timeout=60.0
+                headers={"Cookie": cookies, "Content-Type": "application/json"},
+                timeout=60.0,
             )
-            
+
         if response.status_code >= 400:
             return TriggerResponse(
                 status="failure",
-                message=f"API call failed (status {response.status_code}): {response.text}"
+                message=f"API call failed (status {response.status_code}): {response.text}",
             )
-            
+
         return TriggerResponse(
             status="success",
             message="LED blink completed successfully",
-            data=parse_response(response)
+            data=parse_response(response),
         )
     except HTTPException as e:
-        return TriggerResponse(
-            status="failure",
-            message=str(e.detail)
-        )
+        return TriggerResponse(status="failure", message=str(e.detail))
     except Exception as e:
-        return TriggerResponse(
-            status="failure",
-            message=f"Unexpected error: {str(e)}"
-        )
+        return TriggerResponse(status="failure", message=f"Unexpected error: {str(e)}")
 
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
