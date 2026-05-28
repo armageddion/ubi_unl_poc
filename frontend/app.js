@@ -179,6 +179,9 @@ function loadScenarioData(csvData, scenarioNum) {
 
         if (!labelCode) continue;
 
+        // Skip scenario processing entirely when this scenario has no page, LED, or pattern values.
+        if (!pageValue && !ledValue && !patternValue) continue;
+
         if (pageValue) {
             const pageNum = parseInt(pageValue, 10);
             if (!isNaN(pageNum)) {
