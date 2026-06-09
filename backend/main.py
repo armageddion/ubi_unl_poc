@@ -104,10 +104,20 @@ async def trigger_1(request: Trigger1Request):
                 message=f"API call failed (status {response.status_code}): {response.text}",
             )
 
+        body = parse_response(response)
+        if isinstance(body, dict):
+            err = body.get("error") or body.get("errors") or body.get("failed")
+            if err:
+                return TriggerResponse(
+                    status="failure",
+                    message=f"Solume API error: {err}",
+                    data=body,
+                )
+
         return TriggerResponse(
             status="success",
             message="Page change completed successfully",
-            data=parse_response(response),
+            data=body,
         )
     except HTTPException as e:
         return TriggerResponse(status="failure", message=str(e.detail))
@@ -147,10 +157,20 @@ async def trigger_2(request: Trigger2Request):
                 message=f"API call failed (status {response.status_code}): {response.text}",
             )
 
+        body = parse_response(response)
+        if isinstance(body, dict):
+            err = body.get("error") or body.get("errors") or body.get("failed")
+            if err:
+                return TriggerResponse(
+                    status="failure",
+                    message=f"Solume API error: {err}",
+                    data=body,
+                )
+
         return TriggerResponse(
             status="success",
             message="LED blink completed successfully",
-            data=parse_response(response),
+            data=body,
         )
     except HTTPException as e:
         return TriggerResponse(status="failure", message=str(e.detail))

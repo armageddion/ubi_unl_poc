@@ -1,4 +1,6 @@
 const BACKEND_URL = "https://ubi-unl-poc.onrender.com";
+const BATCH_SIZE = 50;
+const MAX_RETRIES = 2;
 
 const FRONTEND_PASSWORD_HASH = "33d29b02c975065df42a23f560ece8602ed872cf24240fb1e36cd29494e40c96";
 
@@ -210,39 +212,71 @@ function loadScenarioData(csvData, scenarioNum) {
 
 async function triggerPageChangeBatch(labelCodes, page) {
     if (!labelCodes || labelCodes.length === 0) return;
-    
-    try {
-        const response = await fetch(`${BACKEND_URL}/api/trigger-1`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ labelCodes, page }),
-        });
-        
-        const data = await response.json();
-        if (data.status !== 'success') {
-            throw new Error(data.message || 'Page change failed');
+
+    for (let i = 0; i < labelCodes.length; i += BATCH_SIZE) {
+        const batch = labelCodes.slice(i, i + BATCH_SIZE);
+        let lastError;
+
+        for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/trigger-1`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ labelCodes: batch, page }),
+                });
+
+                const data = await response.json();
+                if (data.status !== 'success') {
+                    throw new Error(data.message || 'Page change failed');
+                }
+                lastError = null;
+                break;
+            } catch (error) {
+                lastError = error;
+                if (attempt < MAX_RETRIES - 1) {
+                    await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+                }
+            }
         }
-    } catch (error) {
-        throw error;
+
+        if (lastError) {
+            throw lastError;
+        }
     }
 }
 
 async function triggerLedBlinkBatch(labelCodes, color, duration, pattern = 0) {
     if (!labelCodes || labelCodes.length === 0) return;
 
-    try {
-        const response = await fetch(`${BACKEND_URL}/api/trigger-2`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ labelCodes, color, duration, pattern }),
-        });
+    for (let i = 0; i < labelCodes.length; i += BATCH_SIZE) {
+        const batch = labelCodes.slice(i, i + BATCH_SIZE);
+        let lastError;
 
-        const data = await response.json();
-        if (data.status !== 'success') {
-            throw new Error(data.message || 'LED blink failed');
+        for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/trigger-2`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ labelCodes: batch, color, duration, pattern }),
+                });
+
+                const data = await response.json();
+                if (data.status !== 'success') {
+                    throw new Error(data.message || 'LED blink failed');
+                }
+                lastError = null;
+                break;
+            } catch (error) {
+                lastError = error;
+                if (attempt < MAX_RETRIES - 1) {
+                    await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+                }
+            }
         }
-    } catch (error) {
-        throw error;
+
+        if (lastError) {
+            throw lastError;
+        }
     }
 }
 
